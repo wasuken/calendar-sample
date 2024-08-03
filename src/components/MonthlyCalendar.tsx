@@ -20,17 +20,36 @@ const displayItemsNum = 2;
 const daysInMonth = (month: number, year: number) =>
   new Date(year, month, 0).getDate();
 
-const Calendar: React.FC = () => {
-  const [events, setEvents] = useState<{
-    [key: string]: { name: string; description: string; date: string }[];
-  }>({});
-  const [open, setOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState("");
-  const [newEventName, setNewEventName] = useState("");
-  const [newEventDescription, setNewEventDescription] = useState("");
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+interface CalendarEvent {
+  begin: Date;
+  end: Date;
+  title: string;
+  description: string;
+  // users: User[];
+}
 
+interface MonthlyCalendarProps {
+  yearMonth: string;
+  // データ管理は基本上位コンポーネントがおこなう
+  eventItems: CalendarEvent[];
+  // YYYY-MMの左右のボタンとかでつかう
+  onYearMonthNext: () => void;
+  onYearMonthPrev: () => void;
+  // itemsの更新につかう
+  onEventsUpdate: (events: CalenderEvent[]) => void;
+}
+
+const MonthlyCalendar: React.FC = ({
+  eventItems,
+  yearMonth,
+  onYearMonthNext,
+  onYearMonthPrev,
+  onEventsUpdate,
+}: MonthlyCalendarProps) => {
+  const [newEventBegin, setNewEventBegin] = useState<string>();
+  const [newEventEnd, setNewEventEnd] = useState<string>();
+  const [newEventName, setNewEventName] = useState<string>();
+  const [newEventDescription, setNewEventDescription] = useState<string>();
   const days = daysInMonth(currentMonth + 1, currentYear);
 
   const handleOpen = (date: string) => {
@@ -48,31 +67,11 @@ const Calendar: React.FC = () => {
     const newEvent = {
       name: newEventName,
       description: newEventDescription,
-      date: selectedDate,
+      begin: newEventBegin,
+      end: newEventEnd,
     };
-    setEvents((prevEvents) => ({
-      ...prevEvents,
-      [selectedDate]: [...(prevEvents[selectedDate] || []), newEvent],
-    }));
+    onEventsUpdate([...eventItems, newEvent]);
     handleClose();
-  };
-
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((prevYear) => prevYear + 1);
-    } else {
-      setCurrentMonth((prevMonth) => prevMonth + 1);
-    }
-  };
-
-  const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear((prevYear) => prevYear - 1);
-    } else {
-      setCurrentMonth((prevMonth) => prevMonth - 1);
-    }
   };
 
   return (
@@ -128,6 +127,24 @@ const Calendar: React.FC = () => {
           <TextField
             autoFocus
             margin="dense"
+            label="Begin"
+            type="datetime-local"
+            fullWidth
+            value={newEventBegin}
+            onChange={(e) => setNewEventBegin(e.target.value)}
+          />
+          <TextField
+            autoFocus
+            margin="dense"
+            label="End"
+            type="datetime-local"
+            fullWidth
+            value={newEventEnd}
+            onChange={(e) => setNewEventEnd(e.target.value)}
+          />
+          <TextField
+            autoFocus
+            margin="dense"
             label="Event Name"
             type="text"
             fullWidth
@@ -154,4 +171,4 @@ const Calendar: React.FC = () => {
   );
 };
 
-export default Calendar;
+export default MonthlyCalendar;
